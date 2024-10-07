@@ -4,262 +4,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Terminal README</title>
+    <title>About me</title>
     <style>
-        #terminal {
+        .terminal-image {
             width: 600px;
-            height: 400px;
-            background-color: #1e1e1e;
-            color: #f0f0f0;
-            font-family: monospace;
-            padding: 10px;
-            overflow-y: auto;
-            border-radius: 5px;
-            cursor: text;
+            height: 350px;
+            border-radius: 10px;
+            /* 添加圓角 */
         }
 
-        #input-line {
-            display: flex;
-        }
-
-        #prompt {
-            white-space: pre;
-        }
-
-        #input {
-            background-color: transparent;
+        iframe {
+            border-radius: 10px;
+            /* 為 iframe 添加圓角 */
             border: none;
-            color: #f0f0f0;
-            font-family: monospace;
-            width: 100%;
-            outline: none;
+            /* 移除默認邊框 */
         }
     </style>
 </head>
 
 <body>
-    <div id="terminal" onclick="focusInput()">
-        <div id="output"></div>
-        <div id="input-line">
-            <span id="prompt">guest@github:~$ </span>
-            <input type="text" id="input" autofocus>
-        </div>
+    <h3>Web Terminal -- 彈出式 </h3>
+    <div>
+        <a href="./web_terminal.html" onclick="window.open(this.href, '_blank', 'width=600,height=350'); return false;">
+            <img src="./src/web_terminal.png" alt="啟動!" class="terminal-image">
+        </a>
     </div>
 
-    <script>
-        const terminal = document.getElementById('terminal');
-        const output = document.getElementById('output');
-        const input = document.getElementById('input');
-        const prompt = document.getElementById('prompt');
-
-        const commands = {
-            help: "Available commands: ls, cd, cat, help, about, contact, clear",
-            ls: "README.md    projects/    blog/    resume.pdf",
-            about: "Hi, I'm [Your Name]. I'm a software developer passionate about [Your Interests].",
-            contact: "Email: your.email@example.com\nGitHub: github.com/yourusername\nLinkedIn: linkedin.com/in/yourusername",
-            clear: "",
-            cat: "Usage: cat <filename>"
-        };
-
-        const directories = {
-            "~": "README.md    projects/    blog/    resume.pdf",
-            "projects": "project1/    project2/    project3/",
-            "blog": "post1.md    post2.md    post3.md",
-            "projects/project1": "description.txt",
-            "projects/project2": "",
-            "projects/project3": "",
-        };
-
-        const files = {
-            "README.md": "# Welcome to My GitHub\n\nThis is a sample README file.",
-            "resume.pdf": "[This is a simulated PDF content of my resume]",
-            "projects/project1/description.txt": "This is project 1. It's awesome!",
-            "blog/post1.md": "# My First Blog Post\n\nHello, world!",
-            "blog/post2.md": "# My Second Blog Post\n\nStill blogging!",
-            "blog/post3.md": "# My Third Blog Post\n\nBlogging is fun!",
-        };
-
-        let currentDir = "~";
-        let commandHistory = [];
-        let historyIndex = -1;
-
-        function addOutput(text) {
-            const p = document.createElement('p');
-            p.textContent = text;
-            output.appendChild(p);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-
-        function clearTerminal() {
-            output.innerHTML = '';
-        }
-
-        function processCommand(fullCmd) {
-            // 移除句尾的 "/"
-            fullCmd = fullCmd.replace(/\/+$/, "");
-
-            addOutput(`${prompt.textContent}${fullCmd}`);
-            commandHistory.push(fullCmd);
-            historyIndex = commandHistory.length;
-
-            const args = fullCmd.split(' ');
-            const cmd = args[0];
-
-            switch (cmd) {
-                case 'clear':
-                    clearTerminal();
-                    break;
-                case 'cd':
-                    changeDirectory(args[1]);
-                    break;
-                case 'cat':
-                    catFile(args[1]);
-                    break;
-                case 'ls':
-                    listDirectory(args[1]);
-                    break;
-                case '':
-                    // Do nothing for empty command
-                    break;
-                default:
-                    if (commands.hasOwnProperty(cmd)) {
-                        addOutput(commands[cmd]);
-                    } else {
-                        addOutput(`Command not found: ${cmd}`);
-                    }
-            }
-        }
-
-        function changeDirectory(dir) {
-            if (!dir) {
-                addOutput("cd: missing operand");
-            } else if (dir === "..") {
-                currentDir = currentDir.split('/').slice(0, -1).join('/') || "~";
-            } else {
-                // 移除尾部的斜線（如果有的話）
-                dir = dir.replace(/\/$/, "");
-                const newDir = (currentDir === "~" ? "" : currentDir + "/") + dir;
-                if (directories.hasOwnProperty(newDir)) {
-                    currentDir = newDir;
-                } else {
-                    addOutput(`cd: ${dir}: No such directory`);
-                }
-            }
-            prompt.textContent = `guest@github:${currentDir}$ `;
-        }
-
-        function catFile(file) {
-            if (!file) {
-                addOutput("cat: missing operand");
-            } else {
-                file = file.replace(/\/$/, "");
-                const fullPath = (currentDir === "~" ? "" : currentDir + "/") + file;
-                if (files.hasOwnProperty(fullPath)) {
-                    addOutput(files[fullPath]);
-                } else {
-                    addOutput(`cat: ${file}: No such file`);
-                }
-            }
-        }
-
-        function listDirectory(dir) {
-            dir = dir ? dir.replace(/\/$/, "") : "";
-            const targetDir = dir ? (currentDir === "~" ? "" : currentDir + "/") + dir : currentDir;
-            if (directories.hasOwnProperty(targetDir)) {
-                addOutput(directories[targetDir]);
-            } else {
-                addOutput(`ls: cannot access '${dir}': No such file or directory`);
-            }
-        }
-
-        function focusInput() {
-            input.focus();
-        }
-
-        function getDirectoryContents(dir) {
-            dir = dir.replace(/^\/+|\/+$/g, "");
-            let targetDir = dir === "~" ? dir : (currentDir === "~" ? `~/${dir}` : `${currentDir}/${dir}`);
-
-            // 如果是當前目錄,直接使用 currentDir
-            if (dir === "") {
-                targetDir = currentDir;
-            }
-
-            if (directories.hasOwnProperty(targetDir)) {
-                return directories[targetDir].trim().split(/\s+/);
-            }
-            return [];
-        }
-
-        function autocomplete(inputValue) {
-            const [cmd, ...args] = inputValue.split(' ');
-            const lastArg = args.pop() || '';
-            const prefix = args.length > 0 ? args.join(' ') + ' ' : '';
-
-            let matches = [];
-            if (args.length === 0 && lastArg === '') {
-                // Autocomplete command
-                matches = Object.keys(commands).filter(c => c.startsWith(cmd));
-            } else {
-                // Autocomplete file/directory
-                const contents = getDirectoryContents(currentDir);
-                matches = contents.filter(item => item.startsWith(lastArg));
-            }
-
-            if (matches.length === 1) {
-                if (args.length === 0 && lastArg === '') {
-                    // Command autocomplete
-                    input.value = matches[0];
-                } else {
-                    // File/directory autocomplete
-                    const completion = matches[0].slice(lastArg.length);
-                    input.value = `${cmd} ${prefix}${lastArg}${completion}`;
-                }
-            } else if (matches.length > 1) {
-                addOutput(matches.join('    '));
-                input.value = inputValue;  // Preserve the original input
-            }
-        }
-
-        input.addEventListener('keydown', function (event) {
-            if (event.key === 'Tab') {
-                event.preventDefault();
-                autocomplete(input.value);
-            } else if (event.key === 'ArrowUp') {
-                event.preventDefault();
-                if (historyIndex > 0) {
-                    historyIndex--;
-                    input.value = commandHistory[historyIndex];
-                }
-            } else if (event.key === 'ArrowDown') {
-                event.preventDefault();
-                if (historyIndex < commandHistory.length - 1) {
-                    historyIndex++;
-                    input.value = commandHistory[historyIndex];
-                } else {
-                    historyIndex = commandHistory.length;
-                    input.value = '';
-                }
-            }
-        });
-
-        input.addEventListener('keyup', function (event) {
-            if (event.key === 'Enter') {
-                const cmd = input.value.trim();
-                processCommand(cmd);
-                input.value = '';
-            }
-        });
-
-        // Prevent default behavior when clicking on the input
-        input.addEventListener('click', function (event) {
-            event.stopPropagation();
-        });
-
-        // Initial welcome message
-        addOutput("Welcome to [Your Name]'s GitHub README Terminal!");
-        addOutput("Type 'help' to see available commands.");
-    </script>
+    <h3>Web Terminal -- 內嵌式 </h3>
+    <div>
+        <iframe src="./web_terminal.html" width="600" height="350"></iframe>
+    </div>
 </body>
 
 </html>
